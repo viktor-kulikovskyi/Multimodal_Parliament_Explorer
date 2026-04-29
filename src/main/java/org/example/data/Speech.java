@@ -13,7 +13,7 @@ public class Speech {
     private List<Comment> comment;
 
     // Metadata
-    private String data;
+    private String date;
     private int sessionNumber;
     private int legislativePeriod;
 
@@ -30,9 +30,8 @@ public class Speech {
     public List<Comment> getComment(){return comment;}
     public void setComment(List<Comment> comment){this.comment = comment;}
 
-    public String getData(){return data;}
-
-    public void setData(String data){this.data = data;}
+    public String getDate(){return date;}
+    public void setDate(String date){this.date = date;}
     public int getSessionNumber(){return sessionNumber;}
     public void setSessionNumber(int sessionNumber){this.sessionNumber = sessionNumber;}
     public int getLegislativePeriod(){return legislativePeriod;}
