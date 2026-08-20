@@ -1,0 +1,57 @@
+package org.example.nlpdata;
+
+import org.bson.Document;
+
+/**
+ * The type Named ent.
+ */
+public class NamedEnt{
+    private Document document;
+    /**
+     * The Start.
+     */
+    public int start;
+    /**
+     * The End.
+     */
+    public int end;
+    /**
+     * The Value.
+     */
+    public String value;
+    /**
+     * The Inhalt.
+     */
+    public String inhalt;
+    public void  setStart(int start){
+        this.start = start;
+    }
+    public void setEnd(int end){
+        this.end = end;
+    }
+    public void setValue(String value){
+        this.value = value;
+    }
+    public void setInhalt(String inhalt){
+        this.inhalt = inhalt;
+    }
+    public String getValue(){
+        return this.value;
+    }
+    public String getInhalt(){
+        return this.inhalt;
+    }
+    public int getStart(){
+        return this.start;
+    }
+    public int getEnd(){
+        return this.end;
+    }
+    public Document toDocument()
+    {
+        return new Document()
+                .append("start", this.start)
+                .append("end", this.end)
+                .append("value", this.value)
+                .append("Inhalt", this.inhalt);}
+}
