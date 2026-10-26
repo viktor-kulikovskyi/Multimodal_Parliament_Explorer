@@ -1,0 +1,287 @@
+@startuml Klassendiagramm
+
+left to right direction
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+hide empty members
+
+' ===== Row 1: data + database =====
+package data {
+    class Abgeordneter {
+        - id : String
+        - vorname : String
+        - nachname : String
+        - fraktion : String
+        - fotoUrl : String
+        - metaData : Map
+        + toTeX() : String
+    }
+
+    class Rede {
+        - id : String
+        - rednerId : String
+        - text : String
+        - datum : String
+        - sitzungsNummer : int
+        - legislaturPeriode : int
+        - kommentare : List<Kommentar>
+        + toTeX(..) : String
+    }
+
+    class Kommentar {
+        - text : String
+        - autor : String
+        - fraktion : String
+        + toTeX() : String
+    }
+
+    class Protokoll {
+        - sitzungsNummer : int
+        - wahlperiode : int
+        - datum : String
+        - tagesordnungspunkte : List
+        + getAlleReden() : List<Rede>
+        + toTeX(..) : String
+    }
+
+    class Tagesordnungspunkt {
+        - titel : String
+        - nummer : int
+        - reden : List<Rede>
+        + toTeX(..) : String
+    }
+
+    class Topic {
+        - name : String
+        - score : double
+    }
+
+    Rede "1" *-- "0..*" Kommentar
+    Protokoll "1" *-- "1..*" Tagesordnungspunkt
+    Tagesordnungspunkt "1" *-- "0..*" Rede
+    Rede "0..*" --> "1" Abgeordneter : rednerId
+}
+
+package database {
+    class DatabaseConfig {
+        - host : String
+        - port : int
+        - databaseName : String
+        + getConnectionString() : String
+    }
+
+    class MongoDatabaseHandler {
+        - config : DatabaseConfig
+        - database : MongoDatabase
+        + connect()
+        + disconnect()
+        + createDocument(..)
+        + findDocuments(..) : List
+        + updateDocuments(..) : long
+        + deleteDocuments(..) : long
+        + countDocuments(..) : long
+        + aggregate(..) : List
+    }
+
+    MongoDatabaseHandler *-- DatabaseConfig
+}
+
+' ===== Row 2: nlpdata =====
+package nlpdata {
+    class Satz {
+        + start : int
+        + ende : int
+        + inhalt : String
+        + sentiment : double
+        + toDocument() : Document
+    }
+
+    class NamedEnt {
+        + start : int
+        + end : int
+        + value : String
+        + toDocument() : Document
+    }
+
+    class Thema {
+        + start : int
+        + ende : int
+        + value : String
+        + score : double
+        + toDocument() : Document
+    }
+
+    class Tokendata {
+        + start : int
+        + ende : int
+        + inhalt : String
+        + toDocument() : Document
+    }
+
+    class Lemmdata {
+        + start : int
+        + end : int
+        + value : String
+        + toDocument() : Document
+    }
+
+    class PartsOS {
+        + start : int
+        + end : int
+        + value : String
+        + toDocument() : Document
+    }
+
+    class Depencedata {
+        + begin : int
+        + end : int
+        + governor : String
+        + dependent : String
+        + dependencytype : String
+        + toDocument() : Document
+    }
+
+    class Sarcasmdata {
+        + start : int
+        + ende : int
+        + sarcasmScore : double
+        + nonSarcasmScore : double
+        + toDocument() : Document
+    }
+}
+
+' ===== Row 3: nlp + service + util =====
+package nlp {
+    class NLPController {
+        - composer : DUUIComposer
+        + prepareJCas(String) : JCas
+        + getSentencefromJCas(..) : List
+        + getNamedEntitiesfromJCas(..) : List
+        + getThemasfromJCas(..) : List
+        + getSarcasmFromJCas(..) : List
+    }
+
+    class ReadMongoDocforNLP {
+        - dbHandler : MongoDatabaseHandler
+        - nlpc : NLPController
+        + readDocs(String)
+    }
+
+    class JCasSerializer {
+        + {static} serialize(JCas) : String
+    }
+
+    class JCasDeSerializer {
+        + {static} deserialize(String) : JCas
+    }
+
+    ReadMongoDocforNLP --> MongoDatabaseHandler
+    ReadMongoDocforNLP *-- NLPController
+}
+
+package service {
+    class BundestagDownloader {
+        + fetchProtokolleUrls() : List
+        + downloadStammdaten() : Path
+        + unzipFile(..) : boolean
+    }
+
+    class StammdatenParser {
+        + parseStammdatenXml(Path) : List
+    }
+
+    class ProtokollParser {
+        + parseProtokoll(String) : List
+    }
+
+    class VideoService {
+        + findeVideoIdsFuerSitzung(..) : List
+        + getDownloadUrl(String) : String
+        + downloadVideo(..) : Path
+    }
+}
+
+package util {
+    class PDFGenerator {
+        - outputDir : String
+        - findPdflatex() : String
+        + generate(..) : byte[]
+    }
+
+    class LaTeXExporter {
+        - pdfGenerator : PDFGenerator
+        - dbHandler : MongoDatabaseHandler
+        + {static} escape(String) : String
+        + exportSingle(..) : byte[]
+        + exportMultiple(..) : byte[]
+        + {static} buildNLPStats(..) : String
+    }
+
+    class "LaTeXExporter.RedeNLPData" as RedeNLPData {
+        + saetze : List<Satz>
+        + entities : List<NamedEnt>
+        + themen : List<Thema>
+    }
+
+    class ExportController {
+        - dbHandler : MongoDatabaseHandler
+        - exporter : LaTeXExporter
+        + generatePDF(..) : byte[]
+    }
+
+    LaTeXExporter *-- PDFGenerator
+    LaTeXExporter +-- RedeNLPData
+    ExportController *-- LaTeXExporter
+    ExportController --> MongoDatabaseHandler
+    LaTeXExporter --> MongoDatabaseHandler
+}
+
+' ===== Main =====
+class Main {
+    + {static} main(String[])
+}
+
+' ===== Cross-Package Beziehungen =====
+
+' Main Abhängigkeiten
+Main ..> DatabaseConfig : <<create>>
+Main ..> MongoDatabaseHandler : <<create>>
+Main ..> ExportController : <<create>>
+Main ..> BundestagDownloader : <<use>>
+Main ..> StammdatenParser : <<use>>
+Main ..> ProtokollParser : <<use>>
+
+' Service -> Data Abhängigkeiten
+StammdatenParser ..> Abgeordneter : <<create>>
+ProtokollParser ..> Rede : <<create>>
+ProtokollParser ..> Kommentar : <<create>>
+
+' NLP -> NLPData Abhängigkeiten
+NLPController ..> Satz : <<create>>
+NLPController ..> NamedEnt : <<create>>
+NLPController ..> Thema : <<create>>
+NLPController ..> Tokendata : <<create>>
+NLPController ..> Lemmdata : <<create>>
+NLPController ..> PartsOS : <<create>>
+NLPController ..> Depencedata : <<create>>
+NLPController ..> Sarcasmdata : <<create>>
+
+' Util -> Data Abhängigkeiten
+LaTeXExporter ..> Protokoll : <<use>>
+LaTeXExporter ..> Abgeordneter : <<use>>
+ExportController ..> Protokoll : <<create>>
+ExportController ..> Rede : <<create>>
+ExportController ..> Tagesordnungspunkt : <<create>>
+ExportController ..> Abgeordneter : <<create>>
+
+' Data -> Util Abhängigkeit (LaTeX escape)
+Abgeordneter ..> LaTeXExporter : escape()
+Kommentar ..> LaTeXExporter : escape()
+Rede ..> LaTeXExporter : escape()
+
+' RedeNLPData -> NLPData Abhängigkeiten
+RedeNLPData --> Satz
+RedeNLPData --> NamedEnt
+RedeNLPData --> Thema
+
+@enduml

@@ -1,0 +1,70 @@
+@startuml Package-Diagramm
+
+skinparam packageStyle rectangle
+
+package "org.texttechnologylab.ppr.gruppe.explorer" {
+
+    package "data" {
+        [Abgeordneter]
+        [Rede]
+        [Kommentar]
+        [Protokoll]
+        [Tagesordnungspunkt]
+        [Topic]
+    }
+
+    package "database" {
+        [DatabaseConfig]
+        [MongoDatabaseHandler]
+    }
+
+    package "nlp" {
+        [NLPController]
+        [JCasSerializer]
+        [JCasDeSerializer]
+        [ReadMongoDocforNLP]
+        [ReadXmiforNLP]
+    }
+
+    package "nlpdata" {
+        [Satz]
+        [NamedEnt]
+        [Thema]
+        [Tokendata]
+        [Lemmdata]
+        [PartsOS]
+        [Depencedata]
+        [Sarcasmdata]
+    }
+
+    package "service" {
+        [BundestagDownloader]
+        [StammdatenParser]
+        [ProtokollParser]
+        [VideoService]
+    }
+
+    package "util" {
+        [ExportController]
+        [LaTeXExporter]
+        [PDFGenerator]
+    }
+
+    [Main]
+}
+
+Main --> database
+Main --> service
+Main --> data
+Main --> util
+
+util --> data
+util --> database
+util --> nlpdata
+
+nlp --> database
+nlp --> nlpdata
+
+service ..> data : <<erzeugt>>
+
+@enduml

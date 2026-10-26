@@ -1,0 +1,35 @@
+@startuml Use-Case-Diagramm
+left to right direction
+skinparam actorStyle awesome
+
+actor "User" as user
+
+rectangle "Multimodal Parliament Explorer" {
+    usecase "Startseite anzeigen" as UC1
+    usecase "Reden durchsuchen" as UC2
+    usecase "Rede im Detail ansehen" as UC3
+    usecase "NLP-Annotationen anzeigen\n(Sentiment, NE, Sarkasmus)" as UC4
+    usecase "Video abspielen\nmit Sentiment-Ampel" as UC5
+    usecase "Visualisierungen anzeigen\n(Radar, Sunburst, Line, Bar)" as UC6
+    usecase "Nach Fraktion filtern" as UC7
+    usecase "Nach Topic filtern" as UC8
+    usecase "PDF exportieren" as UC9
+    usecase "LaTeX-Template bearbeiten" as UC10
+    usecase "Export nach Redner/\nFraktion/Topic" as UC11
+}
+
+user --> UC1
+user --> UC2
+user --> UC3
+user --> UC6
+user --> UC9
+
+UC2 ..> UC7 : <<extend>>
+UC3 ..> UC4 : <<include>>
+UC3 ..> UC5 : <<extend>>
+UC6 ..> UC7 : <<extend>>
+UC6 ..> UC8 : <<extend>>
+UC9 ..> UC10 : <<extend>>
+UC9 ..> UC11 : <<extend>>
+
+@enduml
